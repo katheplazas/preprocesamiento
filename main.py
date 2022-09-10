@@ -3,6 +3,7 @@ import pickle
 import py_eureka_client.eureka_client as eureka_client
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
+from sklearn import preprocessing
 
 rest_port = 8060
 
