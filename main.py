@@ -46,6 +46,7 @@ def save_param_standardization():
     return not_post
 
 
+# Metodo para leer parametros de estandarizacion
 @app.route('/read/param/standardization', methods=["GET"])
 def test_dt():
     if request.method == 'GET':
