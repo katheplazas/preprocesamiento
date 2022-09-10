@@ -2,6 +2,8 @@ import time
 import pickle
 import io
 import csv
+import requests
+import ast
 import numpy as np
 import pandas as pd
 import py_eureka_client.eureka_client as eureka_client
@@ -19,6 +21,22 @@ app = Flask(__name__)
 app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
 # app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
+
+API_URL = 'http://prediccion/prediction/model/dt'
+
+
+# API_URL = 'http://prediccion/prediction/model/rf'
+# API_URL = 'http://prediccion/prediction/model/lr'
+# API_URL = 'http://prediccion/prediction/model/svm-linear'
+
+
+def test_model(df):
+    files = {
+        'data': df.to_json().encode(),
+        'type_ml': 'dt',
+    }
+    response = requests.get(API_URL, files=files)
+    return response.text
 
 
 # Metodo de probar conexion con servidor /
@@ -145,13 +163,9 @@ def process():
             # print(f'data complete info: \n{data_complete.info()}')
 
             # print(f'data_complete: {data_complete}')
-            algorithm_files = mongo.db.save_model
-            for i in range(len(data)):
-                #print(data.iloc[i].to_dict())
-                algorithm_files.insert_one(data.iloc[i].to_dict())
 
-            #print("Almacenado")
-
+            # print("Almacenado")
+            data2 = data.copy()
             data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
             file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
             binary = b""
@@ -163,48 +177,18 @@ def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
 
-            '''print(f'len: {len(data)}')
-            print(data)
-            # print(data_complete.)
             ret = test_model(data)
+
             ret = ast.literal_eval(ret)
-            for i in range(len(ret)):
-                if ret[i] == 1:
-                    algorithm_collection = mongo.db.ip_fuente
-                    file = algorithm_collection.find_one({'ip_fuente': data.saddr[i]})
-                    if file is None:
-                        save_dir = jsonify({
-                            'ip_fuente': data.saddr.iloc[i],
-                            'ip_destino': data.daddr.iloc[i],
-                            'port_fuente': data.sport.iloc[i],
-                            'port_destino': data.dport.iloc[i]
-                        })
-                        algorithm_collection.insert_one(save_dir)
 
-            arr = np.ones(len(ret))
+            algorithm_files = mongo.db.save_model
+            for i in range(len(data2)):
+                # print(data.iloc[i].to_dict())
+                algorithm_files.insert_one(data2.iloc[i].to_dict())
 
-            metrics = metrics_train_test(ret, arr)
-            response = create_json(metrics, ret)'''
-
-            return data.to_dict()
+            return ret
 
 
-def create_json(metric, ret):
-    response = jsonify({
-        'Arreglo respuesta': ret,
-        'model_name': 'DT',
-        'DataSet': metric['DataSet'].to_list(),
-        'Model': metric['Model'].to_list(),
-        'ACC': metric['ACC'].to_list(),
-        'Precision': metric['Precision'].to_list(),
-        'Precision_avg': metric['Precision_avg'].to_list(),
-        'recall': metric['recall'].to_list(),
-        'recall_avg': metric['recall_avg'].to_list(),
-        'f1': metric['f1'].to_list(),
-        'f1_avg': metric['f1_avg'].to_list(),
-        'message': 'Metrics successfully'
-    })
-    return response
 
 
 def calcule_feature(df_features):
