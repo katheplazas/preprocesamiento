@@ -22,7 +22,7 @@ app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?au
 # app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
 
-API_URL = 'http://127.0.0.1:8061/prediction/model/dt'
+API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
 
 
 # API_URL = 'http://prediccion/prediction/model/rf'
