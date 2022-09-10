@@ -181,9 +181,10 @@ def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
 
-            ret = test_model(0)
-
-            ret = ast.literal_eval(ret)
+            res = eureka_client.do_service("prediccion", "/model/dt", method="POST", data=data)
+            print(res)
+            print(type(res))
+            ret = ast.literal_eval(res)
 
             algorithm_files = mongo.db.save_model
             for i in range(len(data2)):
