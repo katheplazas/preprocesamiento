@@ -147,10 +147,10 @@ def process():
             # print(f'data_complete: {data_complete}')
             algorithm_files = mongo.db.save_model
             for i in range(len(data)):
-                print(data.iloc[i].to_dict())
+                #print(data.iloc[i].to_dict())
                 algorithm_files.insert_one(data.iloc[i].to_dict())
 
-            print("Almacenado")
+            #print("Almacenado")
 
             data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
             file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
@@ -186,7 +186,7 @@ def process():
             metrics = metrics_train_test(ret, arr)
             response = create_json(metrics, ret)'''
 
-            return data
+            return data.to_dict()
 
 
 def create_json(metric, ret):
