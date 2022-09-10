@@ -14,8 +14,8 @@ app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?au
 mongo = PyMongo(app)
 
 
-# Metodo de probar conexion con servidor
-@app.route('/prueba/', methods=["GET"])
+# Metodo de probar conexion con servidor /
+@app.route('/prueba', methods=["GET"])
 def prueba():
     return "Conectado Python"
 
