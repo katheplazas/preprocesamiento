@@ -22,7 +22,10 @@ app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?au
 # app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
 
-API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
+#API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
+
+
+
 
 
 # API_URL = 'http://prediccion/prediction/model/rf'
@@ -30,19 +33,20 @@ API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
 # API_URL = 'http://prediccion/prediction/model/svm-linear'
 
 
-def test_model(df):
+'''def test_model(df):
     files = {
         'data': df.to_json().encode(),
         'type_ml': 'dt',
     }
     response = requests.get(API_URL, files=files)
-    return response.text
+    return response.text'''
 
 
 # Metodo de probar conexion con servidor /
 @app.route('/prueba', methods=["GET"])
 def prueba():
-    return "Conectado Python"
+    res = eureka_client.do_service("prediccion", "/prueba")
+    return print(res)
 
 
 # Metodo para almacenar parametros de estandarizacion
@@ -177,7 +181,7 @@ def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
 
-            ret = test_model(data)
+            ret = test_model(0)
 
             ret = ast.literal_eval(ret)
 
