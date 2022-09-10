@@ -91,6 +91,7 @@ def process():
             data['sport'] = np.where((data['sport'] == 'dhcpv6-server'), '547', data['sport'])
             data['sport'] = np.where((data['sport'] == 'domain'), '53', data['sport'])
             data['sport'] = np.where((data['sport'] == '0x008f'), '143', data['sport'])
+            data['sport'] = np.where((data['sport'] == '0x0085'), '133', data['sport'])
             data['sport'] = np.where((data['sport'] == '0x0000'), '0', data['sport'])
             data['sport'] = np.where((data['sport'] == ''), '-1', data['sport'])  # Vacio
 
@@ -107,6 +108,7 @@ def process():
             data['dport'] = np.where((data['dport'] == 'dhcpv6-client'), '546', data['dport'])
             data['dport'] = np.where((data['dport'] == 'dhcpv6-server'), '547', data['dport'])
             data['dport'] = np.where((data['dport'] == '0x008f'), '143', data['dport'])
+            data['dport'] = np.where((data['dport'] == '0x0085'), '133', data['dport'])
             data['dport'] = np.where((data['dport'] == '0x0000'), '0', data['dport'])
             data['dport'] = np.where((data['dport'] == 'domain'), '53', data['dport'])
             data['dport'] = np.where((data['dport'] == ''), '-1', data['dport'])  # Vacio
