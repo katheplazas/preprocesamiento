@@ -15,7 +15,7 @@ mongo = PyMongo(app)
 
 
 # Metodo de probar conexion con servidor
-@app.route('/prueba/', methods=["GET"])
+@app.route('/prueba', methods=["GET"])
 def prueba():
     return "Conectado Python"
 
