@@ -181,7 +181,7 @@ def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
 
-            res = eureka_client.do_service("prediccion", "/model/dt", method="POST", data=data)
+            res = eureka_client.do_service("prediccion", "/model/dt", method="GET", data=data)
             print(res)
             print(type(res))
             ret = ast.literal_eval(res)
