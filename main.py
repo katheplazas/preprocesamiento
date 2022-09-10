@@ -46,7 +46,7 @@ mongo = PyMongo(app)
 @app.route('/prueba', methods=["GET"])
 def prueba():
     res = eureka_client.do_service("prediccion", "/prueba")
-    return print(res)
+    return res
 
 
 # Metodo para almacenar parametros de estandarizacion
