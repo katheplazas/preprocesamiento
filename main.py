@@ -1,4 +1,5 @@
 import time
+import pickle
 import py_eureka_client.eureka_client as eureka_client
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
@@ -43,6 +44,20 @@ def save_param_standardization():
             return response, 200
         return not_param
     return not_post
+
+
+# Metodo para leer parametros de estandarizacion
+@app.route('/read/param/standardization', methods=["GET"])
+def test_dt():
+    if request.method == 'GET':
+        file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
+        binary = b""
+        file_chunks = mongo.db.fs.chunks.find({'files_id': file['_id']})
+        for i in file_chunks:
+            binary += i['data']
+        param_standardization = pickle.loads(binary)
+        return param_standardization
+    return "no method GET"
 
 
 @app.errorhandler(404)
