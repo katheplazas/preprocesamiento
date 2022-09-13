@@ -186,18 +186,18 @@ def process():
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
 
-            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data="Conxion", return_type="string")
+            res = eureka_client.do_service("prediccion", "/prueba", method="POST", return_type="string")
 
-            print(res)
             print(type(res))
-            ret = ast.literal_eval(res)
+            print(res)
+            #ret = ast.literal_eval(res)
 
-            algorithm_files = mongo.db.save_model
-            for i in range(len(data2)):
-                # print(data.iloc[i].to_dict())
-                algorithm_files.insert_one(data2.iloc[i].to_dict())
+            #algorithm_files = mongo.db.save_model
+            #for i in range(len(data2)):
+            #    # print(data.iloc[i].to_dict())
+            #    algorithm_files.insert_one(data2.iloc[i].to_dict())
 
-            return ret
+            return res
 
 
 
