@@ -94,7 +94,7 @@ def process():
             data.reset_index(inplace=True, drop=False)
             data.drop(['index'], axis=1, inplace=True)
 
-            # print(f'data is null: {data.isnull().sum().sum}')
+            print(f'data is null: {data.isnull().sum().sum}')
 
             dict_proto = {'arp': 0, 'tcp': 1, 'udp': 2, 'icmp': 4}
             data.insert(2, 'proto_number', data.proto.map(dict_proto, na_action='ignore'))
@@ -186,7 +186,7 @@ def process():
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
             print("SE ENVIAN LOS DATOS")
-            res = eureka_client.do_service("prediccion", "/prueba", method="POST", return_type="string")
+            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data="Hola", return_type="string")
 
             print(type(res))
             print(res)
