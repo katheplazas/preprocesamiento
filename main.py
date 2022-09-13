@@ -14,6 +14,7 @@ from sklearn import preprocessing
 ## Pruebas
 from urllib.parse import urlencode
 from typing import Union
+
 ##
 rest_port = 8060
 
@@ -26,10 +27,7 @@ app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?au
 # app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
 
-#API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
-
-
-
+# API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
 
 
 # API_URL = 'http://prediccion/prediction/model/rf'
@@ -190,16 +188,14 @@ def process():
 
             print(type(res))
             print(res)
-            #ret = ast.literal_eval(res)
+            # ret = ast.literal_eval(res)
 
-            #algorithm_files = mongo.db.save_model
-            #for i in range(len(data2)):
+            # algorithm_files = mongo.db.save_model
+            # for i in range(len(data2)):
             #    # print(data.iloc[i].to_dict())
             #    algorithm_files.insert_one(data2.iloc[i].to_dict())
 
             return res
-
-
 
 
 def calcule_feature(df_features):
@@ -271,5 +267,5 @@ def not_post(error=None):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=rest_port)
-    # app.run(debug=True, port=rest_port)
+    # app.run(host='0.0.0.0', port=rest_port)
+    app.run(debug=True, port=rest_port)
