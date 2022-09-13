@@ -11,6 +11,9 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from sklearn import preprocessing
 
+## Pruebas
+from urllib.parse import urlencode
+##
 rest_port = 8060
 
 eureka_client.init(eureka_server="http://eureka:8761/eureka",
@@ -180,8 +183,11 @@ def process():
 
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
+            ## DATO PRUEBA
+            prueba2 = "conexion satisfactoria"
+            post_data = urlencode(dict(text=str(prueba2))).encode('utf-8')
+            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data=post_data)
 
-            res = eureka_client.do_service("prediccion", "/model/dt", method="GET", data=data.to_json())
             print(res)
             print(type(res))
             ret = ast.literal_eval(res)
