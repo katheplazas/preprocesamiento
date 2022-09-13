@@ -13,6 +13,7 @@ from sklearn import preprocessing
 
 ## Pruebas
 from urllib.parse import urlencode
+from typing import Union
 ##
 rest_port = 8060
 
@@ -186,7 +187,8 @@ def process():
             ## DATO PRUEBA
             prueba2 = "conexion satisfactoria"
             post_data = urlencode(dict(text=str(prueba2))).encode('utf-8')
-            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data=post_data)
+            a = Union["1", None]
+            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data=a, return_type="string")
 
             print(res)
             print(type(res))
