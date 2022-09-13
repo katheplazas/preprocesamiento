@@ -185,10 +185,8 @@ def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
-            prueba2 = "conexion satisfactoria"
-            post_data = urlencode(dict(text=str(prueba2))).encode('utf-8')
-            a = Union["1", None]
-            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data=a, return_type="string")
+
+            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data="Conxion", return_type="string")
 
             print(res)
             print(type(res))
