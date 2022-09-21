@@ -29,7 +29,7 @@ def data_suscription():
 
 
 async def data_publish(data):
-    preprocessing_producer.produce('data-preprocessing', value=data.toJSON())
+    preprocessing_producer.produce('data-preprocessing', value=data.to_json())
     preprocessing_producer.flush()
     while main.received_data is None:
         var = None

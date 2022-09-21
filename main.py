@@ -9,11 +9,12 @@ from flask_pymongo import PyMongo
 from threading import Thread
 import preprocesamiento_service
 from sklearn import preprocessing
+import asyncio
 
 rest_port = 8060
 app = Flask(__name__)
 # app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
-app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
+app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27018/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
 
 received_data = None
