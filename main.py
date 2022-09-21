@@ -2,55 +2,28 @@ import time
 import pickle
 import io
 import csv
-import requests
-import ast
 import numpy as np
 import pandas as pd
-import py_eureka_client.eureka_client as eureka_client
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
+from threading import Thread
+import preprocesamiento_service
 from sklearn import preprocessing
+import asyncio
 
-## Pruebas
-from urllib.parse import urlencode
-from typing import Union
-##
 rest_port = 8060
-
-eureka_client.init(eureka_server="http://eureka:8761/eureka",
-                   app_name="preprocesamiento",
-                   instance_port=rest_port)
-
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
-# app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27017/pruebasPython?authSource=admin'
+# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
+app.config["MONGO_URI"] = 'mongodb://root:123456@localhost:27018/pruebasPython?authSource=admin'
 mongo = PyMongo(app)
 
-#API_URL = 'http://172.18.5.29:8061/prediction/model/dt'
-
-
-
-
-
-# API_URL = 'http://prediccion/prediction/model/rf'
-# API_URL = 'http://prediccion/prediction/model/lr'
-# API_URL = 'http://prediccion/prediction/model/svm-linear'
-
-
-'''def test_model(df):
-    files = {
-        'data': df.to_json().encode(),
-        'type_ml': 'dt',
-    }
-    response = requests.get(API_URL, files=files)
-    return response.text'''
+received_data = None
 
 
 # Metodo de probar conexion con servidor /
 @app.route('/prueba', methods=["GET"])
 def prueba():
-    res = eureka_client.do_service("prediccion", "/prueba")
-    return res
+    return "conectado"
 
 
 # Metodo para almacenar parametros de estandarizacion
@@ -79,7 +52,7 @@ def save_param_standardization():
 
 # Metodo para estandarizar los datos del trafico de red
 @app.route('/data/standardization', methods=["GET"])
-def process():
+async def process():
     if request.method == 'GET':
         if 'traffic' in request.files:
             traffic = request.files['traffic']
@@ -166,7 +139,7 @@ def process():
             # print(f'data info: \n{data.info()}')
 
             # data_complete = pd.DataFrame()
-            calcule_feature(data)
+            data = preprocesamiento_service.calcule_feature(data)
 
             # print(f'data complete info: \n{data_complete.info()}')
 
@@ -186,74 +159,17 @@ def process():
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
             print("SE ENVIAN LOS DATOS")
-            res = eureka_client.do_service("prediccion", "/prueba", method="POST", data="Hola", return_type="string")
+            prediction = await preprocesamiento_service.data_publish(data)
 
-            print(type(res))
-            print(res)
-            #ret = ast.literal_eval(res)
+            print(prediction)
+            # ret = ast.literal_eval(res)
 
-            #algorithm_files = mongo.db.save_model
-            #for i in range(len(data2)):
+            # algorithm_files = mongo.db.save_model
+            # for i in range(len(data2)):
             #    # print(data.iloc[i].to_dict())
             #    algorithm_files.insert_one(data2.iloc[i].to_dict())
 
-            return res
-
-
-
-
-def calcule_feature(df_features):
-    dict = df_features[['saddr', 'bytes']].groupby("saddr").sum().T.to_dict('records')
-    df_features['TnBPSrcIP'] = df_features['saddr'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['daddr', 'bytes']].groupby("daddr").sum().T.to_dict('records')
-    df_features['TnBPDstIP'] = df_features['daddr'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['saddr', 'pkts']].groupby("saddr").sum().T.to_dict('records')
-    df_features['TnP_PSrcIP'] = df_features['saddr'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['daddr', 'pkts']].groupby("daddr").sum().T.to_dict('records')
-    df_features['TnP_PDstIP'] = df_features['daddr'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['proto', 'pkts']].groupby("proto").sum().T.to_dict('records')
-    df_features['TnP_PerProto'] = df_features['proto'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['dport', 'pkts']].groupby("dport").sum().T.to_dict('records')
-    df_features['TnP_Per_Dport'] = df_features['dport'].map(dict[0], na_action='ignore')
-
-    dict = df_features[['saddr', 'proto', 'pkts', 'dur']].groupby(['saddr', 'proto']).sum().reset_index()
-    dict['AR_P_Proto_P_SrcIP'] = dict.pkts / dict.dur
-    dict['key'] = dict.apply(lambda row: row.saddr + row.proto, axis=1)
-    dict = dict[['key', 'AR_P_Proto_P_SrcIP']].set_index('key').T.to_dict('records')
-    df_features['AR_P_Proto_P_SrcIP'] = df_features.apply(lambda row: row.saddr + row.proto, axis=1).map(dict[0],
-                                                                                                         na_action='ignore')
-
-    dict = df_features[['daddr', 'proto', 'pkts', 'dur']].groupby(['daddr', 'proto']).sum().reset_index()
-    dict['AR_P_Proto_P_DstIP'] = dict.pkts / dict.dur
-    dict['key'] = dict.apply(lambda row: row.daddr + row.proto, axis=1)
-    dict = dict[['key', 'AR_P_Proto_P_DstIP']].set_index('key').T.to_dict('records')
-    df_features['AR_P_Proto_P_DstIP'] = df_features.apply(lambda row: row.daddr + row.proto, axis=1).map(dict[0],
-                                                                                                         na_action='ignore')
-
-    dict = df_features.daddr.value_counts().to_dict()
-    df_features['N_IN_Conn_P_DstIP'] = df_features['daddr'].map(dict, na_action='ignore')
-
-    dict = df_features.saddr.value_counts().to_dict()
-    df_features['N_IN_Conn_P_SrcIP'] = df_features['saddr'].map(dict, na_action='ignore')
-
-    dict = df_features[['sport', 'proto', 'pkts', 'dur']].groupby(['sport', 'proto']).sum().reset_index()
-    dict['AR_P_Proto_P_Sport'] = dict.pkts / dict.dur
-    dict['key'] = dict.apply(lambda row: str(row.sport) + row.proto, axis=1)
-    dict = dict[['key', 'AR_P_Proto_P_Sport']].set_index('key').T.to_dict('records')
-    df_features['AR_P_Proto_P_Sport'] = df_features.apply(lambda row: str(row.sport) + row.proto, axis=1).map(dict[0],
-                                                                                                              na_action='ignore')
-
-    dict = df_features[['dport', 'proto', 'pkts', 'dur']].groupby(['dport', 'proto']).sum().reset_index()
-    dict['AR_P_Proto_P_Dport'] = dict.pkts / dict.dur
-    dict['key'] = dict.apply(lambda row: str(row.dport) + row.proto, axis=1)
-    dict = dict[['key', 'AR_P_Proto_P_Dport']].set_index('key').T.to_dict('records')
-    df_features['AR_P_Proto_P_Dport'] = df_features.apply(lambda row: str(row.dport) + row.proto, axis=1).map(dict[0],
-                                                                                                              na_action='ignore')
+            return prediction
 
 
 @app.errorhandler(404)
@@ -271,5 +187,7 @@ def not_post(error=None):
 
 
 if __name__ == "__main__":
+    t = Thread(target=preprocesamiento_service.data_suscription)
+    t.start()
     app.run(host='0.0.0.0', port=rest_port)
     # app.run(debug=True, port=rest_port)
