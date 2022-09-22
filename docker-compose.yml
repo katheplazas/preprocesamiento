@@ -1,0 +1,14 @@
+version: '3'
+services:
+  preprocesamiento:
+    image: preprocesamiento:v1
+    build: .
+    container_name: preprocesamiento
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    networks:
+      - deteccion-anomalias
+networks:
+  deteccion-anomalias:
+    external: true

@@ -25,6 +25,7 @@ def data_suscription():
         else:
             prediction = json.loads(event.value())
             print(f'producto: {prediction}')
+            main.received_data = prediction
             # main.order_warmer = product
 
 
