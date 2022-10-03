@@ -102,6 +102,11 @@ async def process(model_type):
             data['sport'] = np.where((data['sport'] == '0x008f'), '143', data['sport'])
             data['sport'] = np.where((data['sport'] == '0x0085'), '133', data['sport'])
             data['sport'] = np.where((data['sport'] == '0x0000'), '0', data['sport'])
+            data['sport'] = np.where((data['sport'] == 'ssh'), '22', data['sport'])
+            data['sport'] = np.where((data['sport'] == 'auth'), '113', data['sport'])
+            data['sport'] = np.where((data['sport'] == '0x0103'), '259', data['sport'])
+            data['sport'] = np.where((data['sport'] == 'microsoft-ds'), '445', data['sport'])
+            data['sport'] = np.where((data['sport'] == '0xac15'), '44053', data['sport'])
             data['sport'] = np.where((data['sport'] == ''), '-1', data['sport'])  # Vacio
 
             data['sport'] = np.where((data['proto'] == 'arp'), '-1', data['sport'])
@@ -120,6 +125,11 @@ async def process(model_type):
             data['dport'] = np.where((data['dport'] == '0x0085'), '133', data['dport'])
             data['dport'] = np.where((data['dport'] == '0x0000'), '0', data['dport'])
             data['dport'] = np.where((data['dport'] == 'domain'), '53', data['dport'])
+            data['dport'] = np.where((data['dport'] == 'ssh'), '22', data['dport'])
+            data['dport'] = np.where((data['dport'] == 'auth'), '113', data['dport'])
+            data['dport'] = np.where((data['dport'] == '0x0103'), '259', data['dport'])
+            data['dport'] = np.where((data['dport'] == 'microsoft-ds'), '445', data['dport'])
+            data['dport'] = np.where((data['dport'] == '0xac15'), '44053', data['dport'])
             data['dport'] = np.where((data['dport'] == ''), '-1', data['dport'])  # Vacio
 
             data['dport'] = np.where((data['proto'] == 'arp'), '-1', data['dport'])
