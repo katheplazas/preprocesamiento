@@ -6,7 +6,7 @@ services:
     container_name: preprocesamiento
     restart: unless-stopped
     ports:
-      - "6001:6001"
+      - "8050:8050"
     networks:
       - deteccion-anomalias
 networks:

@@ -5,4 +5,4 @@ RUN pip install -r requirements.txt
 COPY . /preprocesamiento
 VOLUME /tmp
 ENTRYPOINT ["python"]
-CMD ["main.py"]
+CMD ["-u","main.py"]

@@ -1,3 +1,4 @@
+import logging
 import time
 import pickle
 import io
@@ -11,10 +12,10 @@ import preprocesamiento_service
 from sklearn import preprocessing
 import asyncio
 
-rest_port = 6001
+rest_port = 8050
 app = Flask(__name__)
-# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
-app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'
+app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
+# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'
 mongo = PyMongo(app)
 
 received_data = None
@@ -51,10 +52,12 @@ def save_param_standardization():
 
 
 # Metodo para estandarizar los datos del trafico de red
-@app.route('/data/standardization', methods=["GET"])
-async def process():
+@app.route('/data/standardization/<model_type>', methods=["GET"])
+async def process(model_type):
     if request.method == 'GET':
         if 'traffic' in request.files:
+            if model_type is None:
+                model_type = 'df'
             traffic = request.files['traffic']
             data_stream = traffic.stream.read()
             stream = io.StringIO(data_stream.decode("UTF8"), newline=None)
@@ -136,17 +139,14 @@ async def process():
             data[['spkts']] = data[['spkts']].astype('int64')
             data[['sbytes']] = data[['sbytes']].astype('int64')
 
-            # print(f'data info: \n{data.info()}')
-
-            # data_complete = pd.DataFrame()
             data = preprocesamiento_service.calcule_feature(data)
 
-            # print(f'data complete info: \n{data_complete.info()}')
+            ### ALMACENAR
+            # algorithm_files = mongo.db.save_model
+            # for i in range(len(data2)):
+            #    # print(data.iloc[i].to_dict())
+            #    algorithm_files.insert_one(data2.iloc[i].to_dict())
 
-            # print(f'data_complete: {data_complete}')
-
-            # print("Almacenado")
-            data2 = data.copy()
             data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
             file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
             binary = b""
@@ -159,15 +159,10 @@ async def process():
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
             print("SE ENVIAN LOS DATOS")
+            data['model'] = model_type
             prediction = await preprocesamiento_service.data_publish(data)
 
-            print(prediction)
             # ret = ast.literal_eval(res)
-
-            # algorithm_files = mongo.db.save_model
-            # for i in range(len(data2)):
-            #    # print(data.iloc[i].to_dict())
-            #    algorithm_files.insert_one(data2.iloc[i].to_dict())
 
             return prediction
 
