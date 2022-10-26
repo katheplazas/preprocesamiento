@@ -21,8 +21,8 @@ eureka_client.init(eureka_server="http://eureka:8761/eureka",
 
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'
-# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'
+app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin' ## Remoto
+#app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin' ## Local
 mongo = PyMongo(app)
 
 received_data = None
@@ -88,52 +88,6 @@ async def process(model_type):
             data.insert(10, 'state_number', data.state.map(dict_state, na_action='ignore'))
             data.state_number = (data.state_number.fillna(value=15)).astype('int64')
 
-            data['sport'] = np.where((data['sport'] == 'http'), '80', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'http-alt'), '591', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'netbios-dgm'), '138', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'https'), '443', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'hostmon'), '5355', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'netbios-ns'), '137', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'mdns'), '5353', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'snap'), '4752', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'dhcpv6-client'), '546', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'dhcpv6-server'), '547', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'domain'), '53', data['sport'])
-            data['sport'] = np.where((data['sport'] == '0x008f'), '143', data['sport'])
-            data['sport'] = np.where((data['sport'] == '0x0085'), '133', data['sport'])
-            data['sport'] = np.where((data['sport'] == '0x0000'), '0', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'ssh'), '22', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'auth'), '113', data['sport'])
-            data['sport'] = np.where((data['sport'] == '0x0103'), '259', data['sport'])
-            data['sport'] = np.where((data['sport'] == 'microsoft-ds'), '445', data['sport'])
-            data['sport'] = np.where((data['sport'] == '0xac15'), '44053', data['sport'])
-            data['sport'] = np.where((data['sport'] == ''), '-1', data['sport'])  # Vacio
-
-            data['sport'] = np.where((data['proto'] == 'arp'), '-1', data['sport'])
-
-            data['dport'] = np.where((data['dport'] == 'http'), '80', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'http-alt'), '591', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'netbios-dgm'), '138', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'https'), '443', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'hostmon'), '5355', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'netbios-ns'), '137', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'mdns'), '5353', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'snap'), '4752', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'dhcpv6-client'), '546', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'dhcpv6-server'), '547', data['dport'])
-            data['dport'] = np.where((data['dport'] == '0x008f'), '143', data['dport'])
-            data['dport'] = np.where((data['dport'] == '0x0085'), '133', data['dport'])
-            data['dport'] = np.where((data['dport'] == '0x0000'), '0', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'domain'), '53', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'ssh'), '22', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'auth'), '113', data['dport'])
-            data['dport'] = np.where((data['dport'] == '0x0103'), '259', data['dport'])
-            data['dport'] = np.where((data['dport'] == 'microsoft-ds'), '445', data['dport'])
-            data['dport'] = np.where((data['dport'] == '0xac15'), '44053', data['dport'])
-            data['dport'] = np.where((data['dport'] == ''), '-1', data['dport'])  # Vacio
-
-            data['dport'] = np.where((data['proto'] == 'arp'), '-1', data['dport'])
-
             data[['sport']] = data[['sport']].astype('int64')
             data[['dport']] = data[['dport']].astype('int64')
 
@@ -158,11 +112,16 @@ async def process(model_type):
 
             data = preprocesamiento_service.calcule_feature(data)
 
+            data_save = data.copy()
+            data_save['tag'] = 0
+            data_save['saddr'] = np.where((data_save['saddr'] == '9.9.9.9'), 1, data['saddr'])
+            data_save['saddr'] = np.where((data_save['saddr'] == '192.168.100.12'), 1, data['saddr'])
+            data_save['saddr'] = np.where((data_save['saddr'] == '192.168.100.13'), 1, data['saddr'])
+            data_save = data_save.to_dict('records')
+            print(f'DATOS A GUARDAR: \n{data_save}')
             ### ALMACENAR
-            # algorithm_files = mongo.db.save_model
-            # for i in range(len(data2)):
-            #    # print(data.iloc[i].to_dict())
-            #    algorithm_files.insert_one(data2.iloc[i].to_dict())
+            data_files = mongo.db.data
+            data_files.insert_many(data_save)
 
             data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
             file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
