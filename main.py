@@ -1,16 +1,15 @@
-import logging
-import time
-import pickle
-import io
 import csv
+import io
+import pickle
+import time
+from threading import Thread
+
 import numpy as np
 import pandas as pd
 from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
-from threading import Thread
+
 import preprocesamiento_service
-from sklearn import preprocessing
-import asyncio
 import py_eureka_client.eureka_client as eureka_client
 
 rest_port = 8050
@@ -19,10 +18,9 @@ eureka_client.init(eureka_server="http://eureka:8761/eureka",
                    app_name="preprocesamiento-seguridad",
                    instance_port=rest_port)
 
-
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin' ## Remoto
-#app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin' ## Local
+app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'  ## Remoto
+# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'  ## Local
 mongo = PyMongo(app)
 
 received_data = None
@@ -77,7 +75,7 @@ async def process(model_type):
             data.reset_index(inplace=True, drop=False)
             data.drop(['index'], axis=1, inplace=True)
 
-            print(f'data is null: {data.isnull().sum().sum}')
+            # print(f'data is null: {data.isnull().sum().sum}')
 
             dict_proto = {'arp': 0, 'tcp': 1, 'udp': 2, 'icmp': 4}
             data.insert(2, 'proto_number', data.proto.map(dict_proto, na_action='ignore'))
@@ -114,14 +112,28 @@ async def process(model_type):
 
             data_save = data.copy()
             data_save['tag'] = 0
-            data_save['saddr'] = np.where((data_save['saddr'] == '9.9.9.9'), 1, data['saddr'])
-            data_save['saddr'] = np.where((data_save['saddr'] == '192.168.100.12'), 1, data['saddr'])
-            data_save['saddr'] = np.where((data_save['saddr'] == '192.168.100.13'), 1, data['saddr'])
-            data_save = data_save.to_dict('records')
-            print(f'DATOS A GUARDAR: \n{data_save}')
-            ### ALMACENAR
-            data_files = mongo.db.data
-            data_files.insert_many(data_save)
+            # print(data_save)
+            data_save['tag'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)), 1,
+                                        data_save['tag'])
+            data_save['tag'] = np.where(((data_save['saddr'] == '192.168.100.12') & (data_save['dport'] == 80)), 1,
+                                        data_save['tag'])
+            data_save['tag'] = np.where(((data_save['saddr'] == '192.168.100.13') & (data_save['dport'] == 80)), 1,
+                                        data_save['tag'])
+
+            data_save['attack_tool'] = ''
+            data_save['attack_tool'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)),
+                                                'hping3', data_save['attack_tool'])
+            data_save['attack_tool'] = np.where(((data_save['saddr'] == '192.168.100.12') & (data_save['dport'] == 80)),
+                                                'hulk', data_save['attack_tool'])
+            data_save['attack_tool'] = np.where(((data_save['saddr'] == '192.168.100.13') & (data_save['dport'] == 80)),
+                                                'golden-eye', data_save['attack_tool'])
+
+            data_save['attack_param'] = ''
+            data_save['attack_param'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)),
+                                                 'flood', data_save['attack_param'])
+            data_save['attack_param'] = np.where(
+                ((data_save['saddr'] == '192.168.100.13') & (data_save['dport'] == 80)),
+                's10mr', data_save['attack_param'])  # s10 -> sockets = 10 mr -> metodo = random
 
             data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
             file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
@@ -134,12 +146,19 @@ async def process(model_type):
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
-            print("SE ENVIAN LOS DATOS")
+            # print("SE ENVIAN LOS DATOS")
             data['model'] = model_type
             prediction = await preprocesamiento_service.data_publish(data)
 
             # ret = ast.literal_eval(res)
-
+            data_save['prediction'] = prediction[:-2]
+            data_save['time_prediction'] = prediction[-2]
+            data_save['model'] = prediction[-1]
+            data_save = data_save.to_dict('records')
+            print(f'DATOS A GUARDAR: \n{data_save}')
+            ### ALMACENAR
+            data_files = mongo.db.data
+            data_files.insert_many(data_save)
             return prediction
 
 
