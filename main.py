@@ -14,13 +14,13 @@ import py_eureka_client.eureka_client as eureka_client
 
 rest_port = 8050
 
-eureka_client.init(eureka_server="http://eureka:8761/eureka",
+'''eureka_client.init(eureka_server="http://eureka:8761/eureka",
                    app_name="preprocesamiento-seguridad",
-                   instance_port=rest_port)
+                   instance_port=rest_port)'''
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'  ## Remoto
-# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'  ## Local
+#app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'  ## Remoto
+app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'  ## Local
 mongo = PyMongo(app)
 
 received_data = None
@@ -57,12 +57,10 @@ def save_param_standardization():
 
 
 # Metodo para estandarizar los datos del trafico de red
-@app.route('/data/standardization/<model_type>', methods=["GET"])
-async def process(model_type):
+@app.route('/data/standardization', methods=["GET"])
+async def process():
     if request.method == 'GET':
         if 'traffic' in request.files:
-            if model_type is None:
-                model_type = 'df'
             traffic = request.files['traffic']
             data_stream = traffic.stream.read()
             stream = io.StringIO(data_stream.decode("UTF8"), newline=None)
@@ -147,13 +145,23 @@ async def process(model_type):
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
             # print("SE ENVIAN LOS DATOS")
-            data['model'] = model_type
-            prediction = await preprocesamiento_service.data_publish(data)
 
+            prediction = await preprocesamiento_service.data_publish(data)
+            list_prediction = []
+            list_time_prediction = []
+            list_model = []
+            for i in prediction:
+                list_prediction.append(i[:-1])
+                list_time_prediction.append(i[-1])
             # ret = ast.literal_eval(res)
-            data_save['prediction'] = prediction[:-2]
-            data_save['time_prediction'] = prediction[-2]
-            data_save['model'] = prediction[-1]
+            data_save['prediction_dt'] = list_prediction[0]
+            data_save['time_prediction_dt'] = list_time_prediction[0]
+            data_save['prediction_lr'] = list_prediction[1]
+            data_save['time_prediction_lr'] = list_time_prediction[1]
+            data_save['prediction_rf'] = list_prediction[2]
+            data_save['time_prediction_rf'] = list_time_prediction[2]
+            data_save['prediction_svm_linear'] = list_prediction[3]
+            data_save['time_prediction_svm_linear'] = list_time_prediction[3]
             data_save = data_save.to_dict('records')
             print(f'DATOS A GUARDAR: \n{data_save}')
             ### ALMACENAR
