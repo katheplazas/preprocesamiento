@@ -163,8 +163,8 @@ async def process():
             data_save['time_prediction_rf'] = list_time_prediction[2]
             data_save['prediction_svm_linear'] = list_prediction[3]
             data_save['time_prediction_svm_linear'] = list_time_prediction[3]
-            data_save = data_save.to_dict('records')
             print(f'DATOS A GUARDAR: \n{data_save}')
+            data_save = data_save.to_dict('records')
             ### ALMACENAR
             data_files = mongo.db.data
             data_files.insert_many(data_save)
