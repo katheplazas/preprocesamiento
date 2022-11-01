@@ -69,6 +69,7 @@ async def process():
             ids = ["stime", "proto", "saddr", "sport", "daddr", "dport", "pkts", "bytes",
                    "state", "ltime", "dur", "spkts", "dpkts", "sbytes", "dbytes"]
             data = pd.DataFrame(data=reader, columns=ids)
+            print(f'DATOS QUE LLEGAN: \n{data}')
             data = data.drop([0], axis=0)
             data.reset_index(inplace=True, drop=False)
             data.drop(['index'], axis=1, inplace=True)
@@ -108,6 +109,7 @@ async def process():
 
             data = preprocesamiento_service.calcule_feature(data)
 
+            print(f'DATOS A COPIAR: \n{data}')
             data_save = data.copy()
             data_save['tag'] = 0
             # print(data_save)
@@ -144,16 +146,15 @@ async def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
-            # print("SE ENVIAN LOS DATOS")
+            #print("SE ENVIAN LOS DATOS")
+            #print(data)
 
             prediction = await preprocesamiento_service.data_publish(data)
             list_prediction = []
             list_time_prediction = []
-            list_model = []
             for i in prediction:
                 list_prediction.append(i[:-1])
                 list_time_prediction.append(i[-1])
-            # ret = ast.literal_eval(res)
             data_save['prediction_dt'] = list_prediction[0]
             data_save['time_prediction_dt'] = list_time_prediction[0]
             data_save['prediction_lr'] = list_prediction[1]
