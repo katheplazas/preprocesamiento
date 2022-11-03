@@ -24,7 +24,7 @@ def data_suscription():
             print(f'Bummer - {event.error()}')
         else:
             prediction = json.loads(event.value())
-            print(f'producto: {prediction}')
+            # print(f'producto: {prediction}')
             main.received_data = prediction
             # main.order_warmer = product
 
