@@ -12,6 +12,7 @@ from flask_pymongo import PyMongo
 import preprocesamiento_service
 import py_eureka_client.eureka_client as eureka_client
 
+pd.options.display.max_columns = None
 rest_port = 8050
 
 eureka_client.init(eureka_server="http://eureka:8761/eureka",
@@ -20,7 +21,7 @@ eureka_client.init(eureka_server="http://eureka:8761/eureka",
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27018/preprocesamiento?authSource=admin'  ## Remoto
-#app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'  ## Local
+# app.config["MONGO_URI"] = 'mongodb://root:123456@mongo:27017/preprocesamiento?authSource=admin'  ## Local
 mongo = PyMongo(app)
 
 received_data = None
@@ -69,7 +70,7 @@ async def process():
             ids = ["stime", "proto", "saddr", "sport", "daddr", "dport", "pkts", "bytes",
                    "state", "ltime", "dur", "spkts", "dpkts", "sbytes", "dbytes"]
             data = pd.DataFrame(data=reader, columns=ids)
-            print(f'DATOS QUE LLEGAN: \n{data}')
+            print(f'DATOS QUE LLEGAN: \n{data.head()}')
             data = data.drop([0], axis=0)
             data.reset_index(inplace=True, drop=False)
             data.drop(['index'], axis=1, inplace=True)
@@ -100,16 +101,16 @@ async def process():
             data[['dpkts']] = data[['dpkts']].astype('int64')
             data[['pkts']] = data[['pkts']].astype('int64')
             data[['dur']] = data[['dur']].astype('float64')
-            data[['stime']] = data[['stime']].astype('float64').astype('int64')
+            data[['stime']] = data[['stime']].astype('float64')
 
             data[['bytes']] = data[['bytes']].astype('int64')
-            data[['ltime']] = data[['ltime']].astype('float64').astype('int64')
+            data[['ltime']] = data[['ltime']].astype('float64')
             data[['spkts']] = data[['spkts']].astype('int64')
             data[['sbytes']] = data[['sbytes']].astype('int64')
 
             data = preprocesamiento_service.calcule_feature(data)
 
-            print(f'DATOS A COPIAR: \n{data}')
+            print(f'DATOS A COPIAR: \n{data.head()}')
             data_save = data.copy()
             data_save['tag'] = 0
             # print(data_save)
@@ -146,8 +147,8 @@ async def process():
             # Estandarizando
             data[data.columns] = scaler.transform(data[data.columns])
             ## DATO PRUEBA
-            #print("SE ENVIAN LOS DATOS")
-            #print(data)
+            # print("SE ENVIAN LOS DATOS")
+            # print(data)
 
             prediction = await preprocesamiento_service.data_publish(data)
             list_prediction = []
@@ -163,7 +164,7 @@ async def process():
             data_save['time_prediction_rf'] = list_time_prediction[2]
             data_save['prediction_svm_linear'] = list_prediction[3]
             data_save['time_prediction_svm_linear'] = list_time_prediction[3]
-            print(f'DATOS A GUARDAR: \n{data_save}')
+            print(f'DATOS A GUARDAR: \n{data_save.head()}')
             data_save = data_save.to_dict('records')
             ### ALMACENAR
             data_files = mongo.db.data
