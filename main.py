@@ -61,8 +61,8 @@ def save_param_standardization():
 async def process():
     if request.method == 'GET':
         data = request.get_json()
-        print(f'Tipo de dato que llega: {type(data)}')
-        print(f'dato que llega: {data}')
+        # print(f'Tipo de dato que llega: {type(data)}')
+        # print(f'dato que llega: {data}')
         # data = json.load(data)
         # traffic = request.files['traffic']
         # data_stream = traffic.stream.read()
@@ -130,10 +130,10 @@ async def process():
 
         data_save['attack_param'] = ''
         data_save['attack_param'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)),
-                                             'flood', data_save['attack_param'])
+                                             'faster', data_save['attack_param'])
         data_save['attack_param'] = np.where(
             ((data_save['saddr'] == '192.168.100.13') & (data_save['dport'] == 80)),
-            's10mr', data_save['attack_param'])  # s10 -> sockets = 10 mr -> metodo = random
+            's10mg', data_save['attack_param'])  # s10 -> sockets = 10 mr -> metodo = random
 
         data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
         file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
