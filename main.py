@@ -57,8 +57,8 @@ def save_param_standardization():
 
 
 # Metodo para estandarizar los datos del trafico de red
-@app.route('/data/standardization', methods=["GET"])
-async def process():
+@app.route('/data/standardization/<param1>/<param2>/<param3>', methods=["GET"])
+async def process(param1,param2,param3):
     if request.method == 'GET':
         data = request.get_json()
         # print(f'Tipo de dato que llega: {type(data)}')
@@ -121,6 +121,7 @@ async def process():
                                     data_save['tag'])
 
         data_save['attack_tool'] = ''
+
         data_save['attack_tool'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)),
                                             'hping3', data_save['attack_tool'])
         data_save['attack_tool'] = np.where(((data_save['saddr'] == '192.168.100.12') & (data_save['dport'] == 80)),
@@ -130,10 +131,10 @@ async def process():
 
         data_save['attack_param'] = ''
         data_save['attack_param'] = np.where(((data_save['saddr'] == '9.9.9.9') & (data_save['dport'] == 80)),
-                                             'faster', data_save['attack_param'])
+                                             param1, data_save['attack_param'])
         data_save['attack_param'] = np.where(
             ((data_save['saddr'] == '192.168.100.13') & (data_save['dport'] == 80)),
-            's10mg', data_save['attack_param'])  # s10 -> sockets = 10 mr -> metodo = random
+            's'+param2+'m'+param3, data_save['attack_param'])  # s10 -> sockets = 10 mr -> metodo = random
 
         data.drop(['saddr', 'sport', 'daddr', 'dport', 'proto', 'state'], axis=1, inplace=True)
         file = mongo.db.fs.files.find_one({'filename': 'param-standardization'})
